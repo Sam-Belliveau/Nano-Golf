@@ -16,7 +16,7 @@ class Sector(Force):
     @property
     def color(self) -> Color: raise NotImplementedError
     
-    def apply(self, electron: Electron) -> None: raise NotImplementedError
+    def apply(self, electron: Electron, dt: float) -> None: raise NotImplementedError
 
 
 class Floor(Sector): 
