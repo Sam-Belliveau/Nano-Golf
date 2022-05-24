@@ -1,7 +1,35 @@
 from __future__ import annotations
 
-from electron import Electron
-
+from math import pi
+import electron
 
 class Force:
-    def apply(self, electron: Electron, dt: float) -> None: raise NotImplementedError
+    def apply(self, electron: electron.Electron, dt: float) -> None: 
+        raise NotImplementedError
+
+##########################
+### PHYSICAL CONSTANTS ###
+##########################
+
+E_MASS   = 9.11E-31 # kg
+E_CHARGE = 1.60E-16 # C
+
+LIGHT_SPEED = 3.0E8 # m / s
+
+VACUUM_PERMITTIVITY = 8.85E-12    # C^2 / (N * m^2)
+VACUUM_PERMEABILITY = pi * 4.0E-7 # (T * m) / A
+
+COULOMBS_LAW_CONSTANT = 9.0E9 # (N * m^2) / C^2
+
+
+######################
+### GAME CONSTANTS ###
+######################
+
+# amount of in game time that passes each second
+SECONDS_PER_SECOND = 1e-4 # scalar
+
+# each pixel is a milli meter
+PIXEL_LENGTH = 1.0E-4 # m
+
+MAX_MAGNETIC_FIELD = 1 # T

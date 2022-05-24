@@ -1,22 +1,25 @@
 from ast import List
-from electron import Electron
-from physics import Force
 from vec2d import Vec2d
+
+import electron
+import physics
 
 ### PLACEHOLDER ###
 class Color: 
     pass
 
 
-class Sector(Force):
+class Sector(physics.Force):
 
     def __init__(self, pos: Vec2d):
         self.pos = pos
 
     @property
-    def color(self) -> Color: raise NotImplementedError
+    def color(self) -> Color: 
+        raise NotImplementedError
     
-    def apply(self, electron: Electron, dt: float) -> None: raise NotImplementedError
+    def apply(self, electron: electron.Electron, dt: float) -> None: 
+        raise NotImplementedError
 
 
 class Floor(Sector): 
@@ -28,7 +31,7 @@ class Floor(Sector):
     def color(self) -> Color:
         pass
 
-    def apply(self, electron: Electron) -> None:
+    def apply(self, electron: electron.Electron) -> None:
         # floors don't do anything
         pass
         
@@ -43,7 +46,7 @@ class MField(Floor):
     def color(self) -> Color:
         return super().color # modify floor color
 
-    def apply(self, electron: Electron) -> None:
+    def apply(self, electron: electron.Electron) -> None:
         pass
 
 
@@ -56,13 +59,5 @@ class Wall(Sector):
     def color(self) -> Color:
         pass
 
-    def apply(self, electron: Electron) -> None:
+    def apply(self, electron: electron.Electron) -> None:
         pass
-    
-
-### PLACEHOLDER ###
-class Image:
-    pass
-
-def build_map(image: Image) -> List(List(Sector)):
-    pass

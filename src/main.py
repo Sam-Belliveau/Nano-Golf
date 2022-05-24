@@ -1,5 +1,7 @@
 import pygame
 
+from level import Level
+
 def game_loop(screen) -> bool:
 
     for event in pygame.event.get():
@@ -16,7 +18,12 @@ def game_loop(screen) -> bool:
 
     return True
 
+
 def main():
+    level = Level("./resources/L1.png")
+    print(level)    
+    print(level.sectors)
+
     pygame.init()
 
     screen = pygame.display.set_mode([500, 500])
