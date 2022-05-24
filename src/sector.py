@@ -1,12 +1,10 @@
-from ast import List
+import pygame
+import random
 from vec2d import Vec2d
 
+import level
 import electron
 import physics
-
-### PLACEHOLDER ###
-class Color: 
-    pass
 
 
 class Sector(physics.Force):
@@ -15,10 +13,10 @@ class Sector(physics.Force):
         self.pos = pos
 
     @property
-    def color(self) -> Color: 
+    def color(self) -> pygame.Color: 
         raise NotImplementedError
     
-    def apply(self, electron: electron.Electron, dt: float) -> None: 
+    def apply(self, electron: 'electron.Electron', dt: float) -> None: 
         raise NotImplementedError
 
 
@@ -28,13 +26,42 @@ class Floor(Sector):
         super().__init__(pos)
 
     @property
-    def color(self) -> Color:
-        pass
+    def color(self) -> pygame.Color:
+        return pygame.Color(0, 255, 0)
 
-    def apply(self, electron: electron.Electron) -> None:
+    def apply(self, electron: 'electron.Electron', dt: float) -> None:
         # floors don't do anything
         pass
         
+
+class Goal(Floor):
+
+    def __init__(self, level: 'level.Level', pos: Vec2d):
+        super().__init__(pos)
+        self.level = level
+
+    @property
+    def color(self) -> pygame.Color: 
+        return pygame.Color(random.randint(128, 255), 255, random.randint(128, 255))
+    
+    def apply(self, electron: 'electron.Electron', dt: float) -> None: 
+        super().apply(electron, dt)
+
+
+class Start(Floor):
+
+    def __init__(self, level: 'level.Level', pos: Vec2d):
+        super().__init__(pos)
+        self.level = level
+        self.level.start = self.pos
+
+    @property
+    def color(self) -> pygame.Color: 
+        return pygame.Color(0, 120, 0)
+    
+    def apply(self, electron: 'electron.Electron', dt: float) -> None: 
+        super().apply(electron, dt)
+
 
 class MField(Floor): 
 
@@ -43,11 +70,18 @@ class MField(Floor):
         self.force = force
 
     @property
-    def color(self) -> Color:
-        return super().color # modify floor color
+    def color(self) -> pygame.Color:
+        r = max(0, min(255, 
+            self.force * 255 / physics.MAX_MAGNETIC_FIELD
+        ))
+        b = max(0, min(255, 
+            -self.force * 255 / physics.MAX_MAGNETIC_FIELD
+        ))
+        
+        return pygame.Color(r, 255 - r - b, b)
 
-    def apply(self, electron: electron.Electron) -> None:
-        pass
+    def apply(self, electron: 'electron.Electron', dt: float) -> None:
+        super().apply(electron, dt)
 
 
 class Wall(Sector): 
@@ -56,8 +90,8 @@ class Wall(Sector):
         super().__init__(pos)
 
     @property
-    def color(self) -> Color:
-        pass
+    def color(self) -> pygame.Color:
+        return pygame.Color(0, 0, 0)
 
-    def apply(self, electron: electron.Electron) -> None:
+    def apply(self, electron: 'electron.Electron', dt: float) -> None:
         pass

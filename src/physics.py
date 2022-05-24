@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 from math import pi
 import electron
 
 class Force:
-    def apply(self, electron: electron.Electron, dt: float) -> None: 
+    def apply(self, electron: 'electron.Electron', dt: float) -> None: 
         raise NotImplementedError
 
 ##########################

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from physics import Force
 
 from vec2d import Vec2d
@@ -11,6 +9,6 @@ class Electron(Force):
         self.pos = pos
         self.vel = Vec2d()
 
-    def apply(self, electron: Electron, dt: float) -> None:
+    def apply(self, electron: 'Electron', dt: float) -> None:
         # TODO:
         pass
