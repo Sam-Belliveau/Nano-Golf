@@ -37,7 +37,7 @@ class Vec2d:
     ### MUL ###
 
     def __mul__(self, rhs: float | int | Vec2d) -> Vec2d:
-        if isinstance(rhs, float):
+        if isinstance(rhs, (float, int)):
             return Vec2d(
                 self.x * rhs, 
                 self.y * rhs
@@ -50,7 +50,7 @@ class Vec2d:
             )
 
     def __rmul__(self, rhs: float | int | Vec2d) -> Vec2d:
-        if isinstance(rhs, float | int):
+        if isinstance(rhs, (float, int)):
             return Vec2d(
                 self.x * rhs, 
                 self.y * rhs
@@ -63,7 +63,7 @@ class Vec2d:
             )
 
     def __imul__(self, rhs: float | int | Vec2d) -> None:
-        if isinstance(rhs, float | int):
+        if isinstance(rhs, (float, int)):
             self.x *= rhs
             self.y *= rhs
         
@@ -75,7 +75,7 @@ class Vec2d:
     ### DIV ###
 
     def __truediv__(self, rhs: float | int) -> Vec2d:
-        if isinstance(rhs, float | int):
+        if isinstance(rhs, (float, int)):
             return Vec2d(
                 self.x / rhs, 
                 self.y / rhs
@@ -88,7 +88,7 @@ class Vec2d:
             )
 
     def __itruediv__(self, rhs: float | int) -> None:
-        if isinstance(rhs, float | int):
+        if isinstance(rhs, (float, int)):
             self.x /= rhs
             self.y /= rhs
     
