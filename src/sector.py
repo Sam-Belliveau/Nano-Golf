@@ -83,6 +83,8 @@ class MField(Floor):
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
         super().apply(electron, dt)
 
+        electron.vel += electron.vel.cross(self.force)
+
 
 class Wall(Sector): 
 

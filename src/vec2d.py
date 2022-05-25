@@ -1,10 +1,11 @@
 from __future__ import annotations
+from re import X
 
 class Vec2d:
 
-    def __init__(self, x: float = 0.0, y: float = 0.0):
-        self.x = x
-        self.y = y
+    def __init__(self, x: float | int = 0.0, y: float | int = 0.0):
+        self.x = float(x)
+        self.y = float(y)
 
 
     ### ADD ###
@@ -35,34 +36,65 @@ class Vec2d:
 
     ### MUL ###
 
-    def __mul__(self, rhs: float) -> Vec2d:
-        return Vec2d(
-            self.x * rhs, 
-            self.y * rhs
-        )
+    def __mul__(self, rhs: float | int | Vec2d) -> Vec2d:
+        if isinstance(rhs, float):
+            return Vec2d(
+                self.x * rhs, 
+                self.y * rhs
+            )
+        
+        if isinstance(rhs, Vec2d):
+            return Vec2d(
+                self.x * rhs.x, 
+                self.y * rhs.y
+            )
 
-    def __rmul__(self, rhs: float) -> Vec2d:
-        return Vec2d(
-            self.x * rhs, 
-            self.y * rhs
-        )
+    def __rmul__(self, rhs: float | int | Vec2d) -> Vec2d:
+        if isinstance(rhs, float | int):
+            return Vec2d(
+                self.x * rhs, 
+                self.y * rhs
+            )
+        
+        if isinstance(rhs, Vec2d):
+            return Vec2d(
+                self.x * rhs.x, 
+                self.y * rhs.y
+            )
 
-    def __imul__(self, rhs: float) -> None:
-        self.x *= rhs
-        self.y *= rhs
+    def __imul__(self, rhs: float | int | Vec2d) -> None:
+        if isinstance(rhs, float | int):
+            self.x *= rhs
+            self.y *= rhs
+        
+        if isinstance(rhs, Vec2d):
+            self.x *= rhs.x
+            self.y *= rhs.x
 
 
     ### DIV ###
 
-    def __truediv__(self, rhs: float) -> Vec2d:
-        return Vec2d(
-            self.x / rhs, 
-            self.y / rhs
-        )
+    def __truediv__(self, rhs: float | int) -> Vec2d:
+        if isinstance(rhs, float | int):
+            return Vec2d(
+                self.x / rhs, 
+                self.y / rhs
+            )
+        
+        if isinstance(rhs, Vec2d):
+            return Vec2d(
+                self.x / rhs.x, 
+                self.y / rhs.y
+            )
 
-    def __itruediv__(self, rhs: float) -> None:
-        self.x /= rhs
-        self.y /= rhs
+    def __itruediv__(self, rhs: float | int) -> None:
+        if isinstance(rhs, float | int):
+            self.x /= rhs
+            self.y /= rhs
+    
+        if isinstance(rhs, Vec2d):
+            self.x /= rhs.x
+            self.y /= rhs.x
 
     ### Products ###
 
@@ -76,6 +108,10 @@ class Vec2d:
         )
 
     ### Nice To Haves ###
+
+    def __iter__(self):
+        yield self.x
+        yield self.y
 
     def __str__(self) -> str:
         return f"({self.x}, {self.y})"

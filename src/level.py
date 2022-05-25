@@ -1,3 +1,4 @@
+import constants
 import os
 import pygame
 import sector
@@ -23,14 +24,15 @@ class Level:
         if g >= 128: return sector.Goal(self, pos)
         if g <= 127: return sector.Start(self, pos)
 
+        # wtf
+        print("somebody made an oopsy")
         return sector.Sector(pos)
         
 
     def __init__(self, file: str):
         image = pygame.image.load(file)
 
-        self.width: int = image.get_width()
-        self.height: int = image.get_height()
+        self.size: int = Vec2d(image.get_width(), image.get_height())
 
         self.start: Vec2d = Vec2d(0, 0)
 
@@ -39,20 +41,37 @@ class Level:
             for y, pixel in enumerate(row)] 
             for x, row in enumerate(pygame.PixelArray(image))]
 
+        self.pixels = pygame.PixelArray(pygame.Surface(tuple(self.size)))
+
     @property
     def surface(self):
-        pixels = pygame.PixelArray(pygame.Surface((self.width, self.height)))
-
         for x, row in enumerate(self.sectors):
             for y, pixel in enumerate(row):
-                pixels[x, y] = pixel.color
+                self.pixels[x, y] = pixel.color
 
-        return pixels.make_surface()
-            
+        return self.pixels.make_surface()
 
+    def get_sector(self, pixel: Vec2d) -> sector.Sector:
+        return self.sectors[int(pixel.x)][int(pixel.y)]
+
+    def set_sector(self, pixel: Vec2d, sector: sector.Sector):
+        sector.pos = pixel
+        self.sectors[int(pixel.x)][int(pixel.y)] = sector
+
+    def unit_to_pixel(self, unit: Vec2d) -> Vec2d:
+        return unit * self.size / physics.PIXEL_LENGTH
+
+    def pixel_to_unit(self, pixel: Vec2d) -> Vec2d:
+        return pixel * physics.PIXEL_LENGTH / self.size
+
+    def pixel_to_screen(self, pixel: Vec2d) -> Vec2d:
+        return constants.BOARD_POS + pixel * constants.BOARD_SIZE / self.size
+
+    def screen_to_pixel(self, screen: Vec2d) -> Vec2d:
+        return (self.size * (screen - constants.BOARD_POS)) / constants.BOARD_SIZE
 
     def __repr__(self):
-        return f"Image(x: {self.width}, y:{self.height})"
+        return f"Image(x: {self.size.x}, y:{self.size.y})"
         
     def __str__(self):
         return self.__repr__()

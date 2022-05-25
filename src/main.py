@@ -1,6 +1,9 @@
+import constants
 import pygame
 
 from level import Level
+import sector
+from vec2d import Vec2d
 
 def game_loop(screen) -> bool:
 
@@ -19,11 +22,15 @@ def main():
 
     pygame.init()
 
-    screen = pygame.display.set_mode([500, 500])
+    screen = pygame.display.set_mode([*constants.WINDOW_SIZE])
+
+    world = pygame.Rect(*constants.BOARD_POS, *(constants.BOARD_POS + constants.BOARD_SIZE))
 
     while game_loop(screen):
-        world = pygame.Rect(0, 0, 500, 500)
-        screen.blit(pygame.transform.scale(level.surface, (500, 500)), world)
+        mouse = Vec2d(*pygame.mouse.get_pos())
+        mouse = level.screen_to_pixel(mouse)
+        level.set_sector(mouse, sector.Wall((0,0)))
+        screen.blit(pygame.transform.scale(level.surface, tuple(constants.BOARD_SIZE)), world)
         pygame.display.flip()
 
     pygame.quit()
