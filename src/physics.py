@@ -27,7 +27,4 @@ COULOMBS_LAW_CONSTANT = 9.0E9 # (N * m^2) / C^2
 # amount of in game time that passes each second
 SECONDS_PER_SECOND = 1e-4 # scalar
 
-# each pixel is a milli meter
-PIXEL_LENGTH = 1.0E-4 # m
-
 MAX_MAGNETIC_FIELD = 1 # T

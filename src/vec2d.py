@@ -4,8 +4,8 @@ from re import X
 class Vec2d:
 
     def __init__(self, x: float | int = 0.0, y: float | int = 0.0):
-        self.x = float(x)
-        self.y = float(y)
+        self.x = x
+        self.y = y
 
 
     ### ADD ###
@@ -16,10 +16,6 @@ class Vec2d:
             self.y + rhs.y
         )
 
-    def __iadd__(self, rhs: Vec2d) -> Vec2d:
-        self.x += rhs.x 
-        self.y += rhs.y
-
 
     ### SUB ###
 
@@ -28,11 +24,6 @@ class Vec2d:
             self.x - rhs.x, 
             self.y - rhs.y
         )
-
-    def __isub__(self, rhs: Vec2d) -> None:
-        self.x -= rhs.x 
-        self.y -= rhs.y
-
 
     ### MUL ###
 
@@ -62,15 +53,6 @@ class Vec2d:
                 self.y * rhs.y
             )
 
-    def __imul__(self, rhs: float | int | Vec2d) -> None:
-        if isinstance(rhs, (float, int)):
-            self.x *= rhs
-            self.y *= rhs
-        
-        if isinstance(rhs, Vec2d):
-            self.x *= rhs.x
-            self.y *= rhs.x
-
 
     ### DIV ###
 
@@ -87,15 +69,6 @@ class Vec2d:
                 self.y / rhs.y
             )
 
-    def __itruediv__(self, rhs: float | int) -> None:
-        if isinstance(rhs, (float, int)):
-            self.x /= rhs
-            self.y /= rhs
-    
-        if isinstance(rhs, Vec2d):
-            self.x /= rhs.x
-            self.y /= rhs.x
-
     ### Products ###
 
     def dot(self, rhs: Vec2d) -> float:
@@ -109,6 +82,12 @@ class Vec2d:
 
     ### Nice To Haves ###
 
+    def floor(self) -> Vec2d:
+        return Vec2d(
+            int(self.x),
+            int(self.y)
+        )
+
     def __iter__(self):
         yield self.x
         yield self.y
@@ -118,5 +97,11 @@ class Vec2d:
 
     def __repr__(self) -> str:
         return f"Vec2d(x: {self.x}, y:{self.y})"
+
+    def __eq__(self, rhs: Vec2d) -> bool:
+        return self.x == rhs.x and self.y == rhs.y
+
+    def __ne__(self, rhs: Vec2d) -> bool:
+        return self.x != rhs.x or self.y != rhs.y
         
 

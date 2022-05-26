@@ -1,6 +1,8 @@
+from ast import List
 import constants
 import os
 import pygame
+import electron
 import sector
 import physics
 from vec2d import Vec2d
@@ -13,7 +15,7 @@ class Level:
 
         # Wall / Floor Detection
         if r == 0 and b == 0:
-            if g == 0: return sector.Wall(pos)
+            if g == 0: return sector.Wall(self, pos)
             if g != 0: return sector.Floor(pos)
 
         # Magnetic Field Detection
@@ -36,7 +38,7 @@ class Level:
 
         self.start: Vec2d = Vec2d(0, 0)
 
-        self.sectors = [[
+        self.sectors: List(List(sector.Sector)) = [[
             self._generate_sector(image.unmap_rgb(pixel), Vec2d(x, y))
             for y, pixel in enumerate(row)] 
             for x, row in enumerate(pygame.PixelArray(image))]
@@ -58,17 +60,18 @@ class Level:
         sector.pos = pixel
         self.sectors[int(pixel.x)][int(pixel.y)] = sector
 
-    def unit_to_pixel(self, unit: Vec2d) -> Vec2d:
-        return unit * self.size / physics.PIXEL_LENGTH
-
-    def pixel_to_unit(self, pixel: Vec2d) -> Vec2d:
-        return pixel * physics.PIXEL_LENGTH / self.size
-
     def pixel_to_screen(self, pixel: Vec2d) -> Vec2d:
         return constants.BOARD_POS + pixel * constants.BOARD_SIZE / self.size
 
     def screen_to_pixel(self, screen: Vec2d) -> Vec2d:
         return (self.size * (screen - constants.BOARD_POS)) / constants.BOARD_SIZE
+
+    def apply(self, electron: 'electron.Electron', dt: float):
+        x, y = electron.pos.floor()
+
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                self.sectors[x + dx][y + dy].apply(electron, dt)
 
     def __repr__(self):
         return f"Image(x: {self.size.x}, y:{self.size.y})"
