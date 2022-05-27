@@ -75,11 +75,21 @@ class Vec2d:
     def dot(self, rhs: Vec2d) -> float:
         return self.x * rhs.x + self.y * rhs.y
 
+    def add_cross(self, z: float) -> Vec2d:
+        if self.magnitude == 0.0: 
+            return self
+
+        result = self + self.cross(z)
+        return result * (result.magnitude / self.magnitude)
+
     def cross(self, z: float) -> Vec2d:
         return Vec2d(
             +self.y * z,
             -self.x * z
         )
+
+    def cross_vec(self, rhs: Vec2d) -> float:
+        return self.x * rhs.y - self.y * rhs.x
 
     ### Nice To Haves ###
 

@@ -24,6 +24,6 @@ COULOMBS_LAW_CONSTANT = 9.0E9 # (N * m^2) / C^2
 ### GAME CONSTANTS ###
 ######################
 
-MAX_MAGNETIC_FIELD = 4 # T
+MAX_MAGNETIC_FIELD = 16 # T
 
 PHYSICS_STEPS = 32

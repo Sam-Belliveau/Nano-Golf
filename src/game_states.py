@@ -35,20 +35,24 @@ class GameLevel:
         self.ball_size = (constants.BOARD_SIZE / self.level.size).x / 2
 
         self.mouse_pressed = False
+        self.mouse_pos = Vec2d(0, 0)
         self.initial_pos = Vec2d(0, 0)
 
     def _get_mouse(self) -> Iterable[Vec2d]:
-        mouse_pos = self.level.screen_to_pixel(Vec2d(*pygame.mouse.get_pos()))
+        self.mouse_pos = self.level.screen_to_pixel(Vec2d(*pygame.mouse.get_pos()))
 
         if pygame.mouse.get_pressed()[0]:
+            yield Vec2d(0, 0)
             if not self.mouse_pressed:
-                self.initial_pos = mouse_pos
+                self.initial_pos = self.mouse_pos
                 self.mouse_pressed = True
-            else:
-                yield Vec2d(0, 0)
-        elif self.mouse_pressed:
-            yield (self.initial_pos - mouse_pos) * constants.SHOOT_SPEED
+        else:
+            if self.mouse_pressed:
+                yield (self.initial_pos - self.mouse_pos) * constants.SHOOT_SPEED
+
             self.mouse_pressed = False
+            self.mouse_pos = Vec2d(0, 0)
+            self.initial_pos = Vec2d(0, 0)
 
     def game_loop(self, dt: float):
         
@@ -65,8 +69,7 @@ class GameLevel:
         screen.blit(pygame.transform.scale(self.level.surface, tuple(constants.BOARD_SIZE)), self.world)
 
         if pygame.mouse.get_pressed()[0]:
-            mouse_pos = self.level.screen_to_pixel(Vec2d(*pygame.mouse.get_pos()))
-            diff = mouse_pos - self.initial_pos
+            diff = self.mouse_pos - self.initial_pos
 
             line_start = self.level.pixel_to_screen(self.player.pos)
             line_end = self.level.pixel_to_screen(self.player.pos - diff)

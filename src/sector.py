@@ -55,18 +55,17 @@ class Goal(Floor):
 
     @property
     def color(self) -> pygame.Color: 
-        y = int(224 + 30 * math.sin(5 * time.time()))
-        return pygame.Color(y, y, 255 - y)
+        s = int(30 * math.sin(12 * time.time()))
+        y = int(224 + s)
+        return pygame.Color(y, 32 + s, y)
     
     def apply(self, electron: 'electron.Electron', dt: float) -> None: 
-        super().apply(electron, dt)
-
         if self.contains(electron):
             vel_mag = electron.vel.magnitude
             diff = (self.center - electron.pos)
 
             if vel_mag < constants.MAX_SCORING_SPEED:
-                m = 1.0 - math.exp(-dt)
+                m = 1.0 - math.exp(-dt / 0.5)
 
                 electron.vel = Vec2d(0, 0)
                 electron.pos += diff * m
@@ -75,7 +74,9 @@ class Goal(Floor):
                     self.level.completed = True
             
             else:
-                electron.vel += diff * vel_mag * dt * constants.HOLE_DEFLECT_SPEED
+                electron.vel = electron.vel.add_cross(
+                    dt * diff.cross_vec(electron.vel) * constants.HOLE_DEFLECT_SPEED
+                ) 
 
 
 class Start(Floor):
@@ -99,9 +100,8 @@ class MField(Floor):
         super().__init__(pos)
         self.force = force
         
-        s = math.sin(24 * time.time())
         self.r = int(max(0, min(255, 
-            s + +self.force * 255 / physics.MAX_MAGNETIC_FIELD
+            +self.force * 255 / physics.MAX_MAGNETIC_FIELD
         )))
         self.b = int(max(0, min(255, 
             -self.force * 255 / physics.MAX_MAGNETIC_FIELD
@@ -110,14 +110,13 @@ class MField(Floor):
 
     @property
     def color(self) -> pygame.Color:
-
         return pygame.Color(self.r, self.g, self.b)
 
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
         super().apply(electron, dt)
 
         if self.contains(electron):
-            electron.vel -= dt * electron.vel.cross(self.force)
+            electron.vel = electron.vel.add_cross(-dt * self.force)
 
 
 class Wall(Sector): 
