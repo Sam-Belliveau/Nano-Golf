@@ -1,4 +1,5 @@
 import math
+import time
 import pygame
 import random
 from vec2d import Vec2d
@@ -54,20 +55,27 @@ class Goal(Floor):
 
     @property
     def color(self) -> pygame.Color: 
-        return pygame.Color(random.randint(128, 255), 255, random.randint(128, 255))
+        y = int(224 + 30 * math.sin(5 * time.time()))
+        return pygame.Color(y, y, 255 - y)
     
     def apply(self, electron: 'electron.Electron', dt: float) -> None: 
         super().apply(electron, dt)
 
         if self.contains(electron):
-            m = 1.0 - math.exp(-dt)
+            vel_mag = electron.vel.magnitude
             diff = (self.center - electron.pos)
 
-            electron.vel = Vec2d(0, 0)
-            electron.pos += diff * m
+            if vel_mag < constants.MAX_SCORING_SPEED:
+                m = 1.0 - math.exp(-dt)
 
-            if diff.magnitude < 0.05:
-                self.level.completed = True
+                electron.vel = Vec2d(0, 0)
+                electron.pos += diff * m
+
+                if diff.magnitude < 0.05:
+                    self.level.completed = True
+            
+            else:
+                electron.vel += diff * vel_mag * dt * constants.HOLE_DEFLECT_SPEED
 
 
 class Start(Floor):
@@ -91,16 +99,18 @@ class MField(Floor):
         super().__init__(pos)
         self.force = force
         
+        s = math.sin(24 * time.time())
         self.r = int(max(0, min(255, 
-            self.force * 255 / physics.MAX_MAGNETIC_FIELD
+            s + +self.force * 255 / physics.MAX_MAGNETIC_FIELD
         )))
         self.b = int(max(0, min(255, 
             -self.force * 255 / physics.MAX_MAGNETIC_FIELD
         )))
-        self.g = int(max(0, min(255, 255 - self.r - self.b)))
+        self.g = int(max(0, min(255, 64 - self.r - self.b)))
 
     @property
     def color(self) -> pygame.Color:
+
         return pygame.Color(self.r, self.g, self.b)
 
     def apply(self, electron: 'electron.Electron', dt: float) -> None:

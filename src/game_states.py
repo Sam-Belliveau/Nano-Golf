@@ -1,3 +1,4 @@
+from curses import mouseinterval
 from typing import Iterable
 import constants
 import pygame
@@ -46,13 +47,14 @@ class GameLevel:
             else:
                 yield Vec2d(0, 0)
         elif self.mouse_pressed:
-            yield self.initial_pos - mouse_pos
+            yield (self.initial_pos - mouse_pos) * constants.SHOOT_SPEED
             self.mouse_pressed = False
 
     def game_loop(self, dt: float):
-
-        for vel in self._get_mouse():
-            self.player.vel = vel
+        
+        if self.player.vel.magnitude < constants.MAX_SHOOTING_SPEED:
+            for vel in self._get_mouse():
+                self.player.vel = vel
 
         p_dt = dt / physics.PHYSICS_STEPS
         for _i in range(physics.PHYSICS_STEPS):
@@ -61,6 +63,16 @@ class GameLevel:
 
     def draw(self, screen: pygame.Surface):
         screen.blit(pygame.transform.scale(self.level.surface, tuple(constants.BOARD_SIZE)), self.world)
+
+        if pygame.mouse.get_pressed()[0]:
+            mouse_pos = self.level.screen_to_pixel(Vec2d(*pygame.mouse.get_pos()))
+            diff = mouse_pos - self.initial_pos
+
+            line_start = self.level.pixel_to_screen(self.player.pos)
+            line_end = self.level.pixel_to_screen(self.player.pos - diff)
+            pygame.draw.line(screen, (255, 0, 0), tuple(line_start), tuple(line_end))
+
+
         pygame.draw.circle(screen, (255, 255, 255), tuple(self.level.pixel_to_screen(self.player.pos)), self.ball_size)
 
     def is_finished(self) -> bool:
