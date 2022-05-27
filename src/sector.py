@@ -27,8 +27,10 @@ class Sector(physics.Force):
     
     def contains_radius(self, electron: 'electron.Electron', radius: float = 0.0):
         dp = electron.pos - self.pos
-        return ((-radius <= dp.x) and (dp.x <= radius + 1)
-            and (-radius <= dp.y) and (dp.y <= radius + 1))
+        return math.hypot(
+            max(0.0, -dp.x, dp.x - 1.0),
+            max(0.0, -dp.y, dp.y - 1.0),
+        ) <= radius
         
 
 
@@ -60,7 +62,7 @@ class Goal(Floor):
         return pygame.Color(y, 32 + s, y)
     
     def apply(self, electron: 'electron.Electron', dt: float) -> None: 
-        if self.contains(electron):
+        if self.contains_radius(electron, 0.5):
             vel_mag = electron.vel.magnitude
             diff = (self.center - electron.pos)
 
@@ -100,17 +102,20 @@ class MField(Floor):
         super().__init__(pos)
         self.force = force
         
-        self.r = int(max(0, min(255, 
-            +self.force * 255 / physics.MAX_MAGNETIC_FIELD
-        )))
-        self.b = int(max(0, min(255, 
-            -self.force * 255 / physics.MAX_MAGNETIC_FIELD
-        )))
-        self.g = int(max(0, min(255, 64 - self.r - self.b)))
-
     @property
     def color(self) -> pygame.Color:
-        return pygame.Color(self.r, self.g, self.b)
+        color = super().color
+        if 0 < self.force:
+            color.r = int(160 + 32 * math.sin(self.pos.y + self.force * time.time()))
+            color.g = color.g - color.r
+
+        if 0 > self.force:
+            color.b = int(160 + 32 * math.sin(self.pos.y + self.force * time.time()))
+            color.g = color.g - color.b
+
+        return color
+            
+
 
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
         super().apply(electron, dt)
@@ -147,28 +152,17 @@ class Wall(Sector):
         if self.contains_radius(electron, 0.5):
             rel_pos = electron.pos - self.pos
 
-            t, b, l, r = self._get_dirs()
+            if electron.vel.dot(rel_pos) <= 0:
+                t, b, l, r = self._get_dirs()
 
-            t &= rel_pos.y >= 0.5
-            b &= rel_pos.y <= 0.5
-            l &= rel_pos.x <= 0.5
-            r &= rel_pos.y >= 0.5
-
-            t &= electron.vel.y <= 0.0
-            b &= electron.vel.y >= 0.0
-            l &= electron.vel.x >= 0.0
-            r &= electron.vel.x <= 0.0
-            
-            if (t and r) or (b and l):
-                electron.vel = Vec2d(-electron.vel.y, -electron.vel.x)  
-
-            elif (t and l) or (b and r):
-                electron.vel = Vec2d(electron.vel.y, electron.vel.x)  
-
-            elif t or b: 
-                electron.vel.y *= -1
+                t &= rel_pos.y >= 0.5
+                b &= rel_pos.y <= 0.5
+                l &= rel_pos.x <= 0.5
+                r &= rel_pos.x >= 0.5
                 
-            elif l or r: 
-                electron.vel.x *= -1
+                if   (t and r) or (b and l): electron.vel = Vec2d(-electron.vel.y, -electron.vel.x)  
+                elif (t and l) or (b and r): electron.vel = Vec2d(+electron.vel.y, +electron.vel.x)  
+                elif t or b: electron.vel.y *= -1
+                elif l or r: electron.vel.x *= -1
             
             
