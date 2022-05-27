@@ -1,4 +1,5 @@
 from __future__ import annotations
+import math
 from re import X
 
 class Vec2d:
@@ -81,6 +82,10 @@ class Vec2d:
         )
 
     ### Nice To Haves ###
+
+    @property
+    def magnitude(self) -> float:
+        return math.hypot(self.x, self.y)
 
     def floor(self) -> Vec2d:
         return Vec2d(

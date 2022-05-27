@@ -1,12 +1,14 @@
 import constants
 import pygame
 from electron import Electron
+from game_states import GameLevel
 
 from level import Level
 import sector
+import physics
 from vec2d import Vec2d
 
-def game_loop(screen) -> bool:
+def pygame_running(screen) -> bool:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -22,23 +24,25 @@ def main():
     pygame.init()
 
     clock = pygame.time.Clock()
-
     screen = pygame.display.set_mode([*constants.WINDOW_SIZE])
+    
+    states = [] 
+    states.append(GameLevel(1))
 
-    world = pygame.Rect(*constants.BOARD_POS, *(constants.BOARD_POS + constants.BOARD_SIZE))
-
-    level = Level("./resources/L1.png")
-    electron = Electron(level.start)
-    electron.vel.x = 25
-
-    while game_loop(screen):
+    while pygame_running(screen):
         dt = clock.tick(60) / 1000.0
 
-        level.apply(electron, dt)
-        electron.update(dt)
+        state = states[-1]
 
-        screen.blit(pygame.transform.scale(level.surface, tuple(constants.BOARD_SIZE)), world)
-        pygame.draw.circle(screen, (255, 255, 255), tuple(level.pixel_to_screen(electron.pos)), 10)
+        state.game_loop(dt)
+        state.draw(screen)
+
+        if state.is_finished():
+            states.pop()
+
+        for next in state.next_state():
+            states.append(next)        
+
         pygame.display.flip()
 
     pygame.quit()

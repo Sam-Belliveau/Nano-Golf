@@ -21,13 +21,13 @@ class Sector(physics.Force):
     def apply(self, electron: 'electron.Electron', dt: float) -> None: 
         raise NotImplementedError
 
-    def contains(self, electron: 'electron.Electron', radius = 0.0) -> bool:
-        if radius == 0.0:
-            return self.pos == electron.pos.floor()
-        
+    def contains(self, electron: 'electron.Electron') -> bool:
+        return self.pos == electron.pos.floor()
+    
+    def contains_radius(self, electron: 'electron.Electron', radius: float = 0.0):
         dp = electron.pos - self.pos
-        return ((-radius <= dp.x) or (dp.x <= radius + 1)
-             or (-radius <= dp.y) or (dp.y <= radius + 1))
+        return ((-radius <= dp.x) and (dp.x <= radius + 1)
+            and (-radius <= dp.y) and (dp.y <= radius + 1))
         
 
 
@@ -38,11 +38,9 @@ class Floor(Sector):
 
     @property
     def color(self) -> pygame.Color:
-        return pygame.Color(0, 255, 0)
+        return pygame.Color(0, 200, 0)
 
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
-        print(f"pos: {electron.pos}")
-        print(f"vel: {electron.vel}")
         if self.contains(electron):
             electron.vel *= math.exp(-dt / constants.FLOOR_FRICTION_DT)
         
@@ -51,6 +49,7 @@ class Goal(Floor):
 
     def __init__(self, level: 'level.Level', pos: Vec2d):
         super().__init__(pos)
+        self.center = self.pos + Vec2d(0.5, 0.5)
         self.level = level
 
     @property
@@ -61,8 +60,14 @@ class Goal(Floor):
         super().apply(electron, dt)
 
         if self.contains(electron):
-            # win condition
-            pass
+            m = 1.0 - math.exp(-dt)
+            diff = (self.center - electron.pos)
+
+            electron.vel = Vec2d(0, 0)
+            electron.pos += diff * m
+
+            if diff.magnitude < 0.05:
+                self.level.completed = True
 
 
 class Start(Floor):
@@ -85,17 +90,18 @@ class MField(Floor):
     def __init__(self, pos: Vec2d, force: float):
         super().__init__(pos)
         self.force = force
+        
+        self.r = int(max(0, min(255, 
+            self.force * 255 / physics.MAX_MAGNETIC_FIELD
+        )))
+        self.b = int(max(0, min(255, 
+            -self.force * 255 / physics.MAX_MAGNETIC_FIELD
+        )))
+        self.g = int(max(0, min(255, 255 - self.r - self.b)))
 
     @property
     def color(self) -> pygame.Color:
-        r = max(0, min(255, 
-            self.force * 255 / physics.MAX_MAGNETIC_FIELD
-        ))
-        b = max(0, min(255, 
-            -self.force * 255 / physics.MAX_MAGNETIC_FIELD
-        ))
-        
-        return pygame.Color(r, 255 - r - b, b)
+        return pygame.Color(self.r, self.g, self.b)
 
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
         super().apply(electron, dt)
@@ -129,7 +135,7 @@ class Wall(Sector):
 
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
 
-        if self.contains(electron, 1.0):
+        if self.contains_radius(electron, 0.5):
             rel_pos = electron.pos - self.pos
 
             t, b, l, r = self._get_dirs()
@@ -139,11 +145,21 @@ class Wall(Sector):
             l &= rel_pos.x <= 0.5
             r &= rel_pos.y >= 0.5
 
-            t &= electron.vel.y <= 0
-            b &= electron.vel.y >= 0
-            l &= electron.vel.x >= 0
-            r &= electron.vel.x <= 0
+            t &= electron.vel.y <= 0.0
+            b &= electron.vel.y >= 0.0
+            l &= electron.vel.x >= 0.0
+            r &= electron.vel.x <= 0.0
+            
+            if (t and r) or (b and l):
+                electron.vel = Vec2d(-electron.vel.y, -electron.vel.x)  
 
-            if t or b: electron.vel.y *= -1
-            if l or r: electron.vel.x *= -1
+            elif (t and l) or (b and r):
+                electron.vel = Vec2d(electron.vel.y, electron.vel.x)  
+
+            elif t or b: 
+                electron.vel.y *= -1
+                
+            elif l or r: 
+                electron.vel.x *= -1
+            
             

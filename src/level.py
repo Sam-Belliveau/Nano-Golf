@@ -45,6 +45,8 @@ class Level:
 
         self.pixels = pygame.PixelArray(pygame.Surface(tuple(self.size)))
 
+        self.completed = False
+
     @property
     def surface(self):
         for x, row in enumerate(self.sectors):
@@ -54,11 +56,10 @@ class Level:
         return self.pixels.make_surface()
 
     def get_sector(self, pixel: Vec2d) -> sector.Sector:
-        return self.sectors[int(pixel.x)][int(pixel.y)]
-
-    def set_sector(self, pixel: Vec2d, sector: sector.Sector):
-        sector.pos = pixel
-        self.sectors[int(pixel.x)][int(pixel.y)] = sector
+        try:
+            return self.sectors[pixel.x][pixel.y]
+        except IndexError:
+            return None
 
     def pixel_to_screen(self, pixel: Vec2d) -> Vec2d:
         return constants.BOARD_POS + pixel * constants.BOARD_SIZE / self.size
@@ -71,7 +72,11 @@ class Level:
 
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
-                self.sectors[x + dx][y + dy].apply(electron, dt)
+                try:
+                    self.sectors[x + dx][y + dy].apply(electron, dt)
+                except IndexError as e:
+                    # A ball his the edge of the world
+                    pass
 
     def __repr__(self):
         return f"Image(x: {self.size.x}, y:{self.size.y})"
