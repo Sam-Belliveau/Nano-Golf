@@ -25,6 +25,7 @@ def main():
 
     clock = pygame.time.Clock()
     screen = pygame.display.set_mode([*constants.WINDOW_SIZE])
+    pygame.display.set_icon(pygame.image.load("./resources/icon.png"))
     
     states = [] 
     states.append(GameLevel(1))
