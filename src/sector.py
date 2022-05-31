@@ -14,6 +14,7 @@ class Sector(physics.Force):
 
     def __init__(self, pos: Vec2d):
         self.pos = pos.floor()
+        self.center = self.pos + Vec2d(0.5, 0.5)
 
     @property
     def color(self) -> pygame.Color: 
@@ -52,7 +53,6 @@ class Goal(Floor):
 
     def __init__(self, level: 'level.Level', pos: Vec2d):
         super().__init__(pos)
-        self.center = self.pos + Vec2d(0.5, 0.5)
         self.level = level
 
     @property
@@ -150,19 +150,19 @@ class Wall(Sector):
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
 
         if self.contains_radius(electron, 0.5):
-            rel_pos = electron.pos - self.pos
+            rel_pos = electron.pos - self.center
 
-            if electron.vel.dot(rel_pos) <= 0:
-                t, b, l, r = self._get_dirs()
+            t, b, l, r = self._get_dirs()
+            t &= rel_pos.y >= 0.0
+            b &= rel_pos.y <= 0.0
+            l &= rel_pos.x <= 0.0
+            r &= rel_pos.x >= 0.0
 
-                t &= rel_pos.y >= 0.5
-                b &= rel_pos.y <= 0.5
-                l &= rel_pos.x <= 0.5
-                r &= rel_pos.x >= 0.5
-                
-                if   (t and r) or (b and l): electron.vel = Vec2d(-electron.vel.y, -electron.vel.x)  
-                elif (t and l) or (b and r): electron.vel = Vec2d(+electron.vel.y, +electron.vel.x)  
-                elif t or b: electron.vel.y *= -1
-                elif l or r: electron.vel.x *= -1
+            if not t: rel_pos.y = min(0.0, rel_pos.y)
+            if not b: rel_pos.y = max(0.0, rel_pos.y)
+            if not l: rel_pos.x = max(0.0, rel_pos.x)
+            if not r: rel_pos.x = min(0.0, rel_pos.x)
             
+            rel_pos = rel_pos.normalized()
+            electron.vel -= 2.0 * rel_pos * min(0.0, rel_pos.dot(electron.vel))
             

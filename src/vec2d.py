@@ -97,6 +97,11 @@ class Vec2d:
     def magnitude(self) -> float:
         return math.hypot(self.x, self.y)
 
+    def normalized(self) -> Vec2d:
+        magnitude = self.magnitude
+        if magnitude == 0.0: return Vec2d(0, 0)
+        return self / magnitude
+
     def floor(self) -> Vec2d:
         return Vec2d(
             int(self.x),
