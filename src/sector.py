@@ -1,7 +1,6 @@
 import math
 import time
 import pygame
-import random
 from vec2d import Vec2d
 
 import level
@@ -23,17 +22,16 @@ class Sector(physics.Force):
     def apply(self, electron: 'electron.Electron', dt: float) -> None: 
         raise NotImplementedError
 
+    def distance(self, pos: Vec2d) -> Vec2d:
+        dp = pos - self.center
+        return Vec2d(
+            min(0.0, dp.x + 0.5) + max(0.0, dp.x - 0.5),
+            min(0.0, dp.y + 0.5) + max(0.0, dp.y - 0.5),
+        )
+
     def contains(self, electron: 'electron.Electron') -> bool:
         return self.pos == electron.pos.floor()
-    
-    def contains_radius(self, electron: 'electron.Electron', radius: float = 0.0):
-        dp = electron.pos - self.pos
-        return math.hypot(
-            max(0.0, -dp.x, dp.x - 1.0),
-            max(0.0, -dp.y, dp.y - 1.0),
-        ) <= radius
         
-
 
 class Floor(Sector): 
 
@@ -62,7 +60,7 @@ class Goal(Floor):
         return pygame.Color(y, 32 + s, y)
     
     def apply(self, electron: 'electron.Electron', dt: float) -> None: 
-        if self.contains_radius(electron, 0.5):
+        if self.distance(electron.pos).magnitude <= 0.5:
             vel_mag = electron.vel.magnitude
             diff = (self.center - electron.pos)
 
@@ -116,7 +114,6 @@ class MField(Floor):
         return color
             
 
-
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
         super().apply(electron, dt)
 
@@ -148,21 +145,20 @@ class Wall(Sector):
         return self.t, self.b, self.l, self.r
 
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
+        dist = self.distance(electron.pos)
 
-        if self.contains_radius(electron, 0.5):
-            rel_pos = electron.pos - self.center
-
+        if dist.magnitude <= 0.5:
             t, b, l, r = self._get_dirs()
-            t &= rel_pos.y >= 0.0
-            b &= rel_pos.y <= 0.0
-            l &= rel_pos.x <= 0.0
-            r &= rel_pos.x >= 0.0
+            t &= dist.y >= 0.0
+            b &= dist.y <= 0.0
+            l &= dist.x <= 0.0
+            r &= dist.x >= 0.0
 
-            if not t: rel_pos.y = min(0.0, rel_pos.y)
-            if not b: rel_pos.y = max(0.0, rel_pos.y)
-            if not l: rel_pos.x = max(0.0, rel_pos.x)
-            if not r: rel_pos.x = min(0.0, rel_pos.x)
+            if not t: dist.y = min(0.0, dist.y)
+            if not b: dist.y = max(0.0, dist.y)
+            if not l: dist.x = max(0.0, dist.x)
+            if not r: dist.x = min(0.0, dist.x)
             
-            rel_pos = rel_pos.normalized()
-            electron.vel -= 2.0 * rel_pos * min(0.0, rel_pos.dot(electron.vel))
+            normal = dist.normalized()
+            electron.vel -= 2.0 * normal * min(0.0, normal.dot(electron.vel))
             
