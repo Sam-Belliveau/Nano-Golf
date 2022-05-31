@@ -26,6 +26,7 @@ def main():
     clock = pygame.time.Clock()
     screen = pygame.display.set_mode([*constants.WINDOW_SIZE])
     pygame.display.set_icon(pygame.image.load("./resources/icon.png"))
+    pygame.display.set_caption("Nano-Golf - Ayan & Sam")
     
     states = [] 
     states.append(GameLevel(1))

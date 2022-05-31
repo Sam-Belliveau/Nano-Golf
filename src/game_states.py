@@ -38,6 +38,12 @@ class GameLevel:
         self.mouse_pos = Vec2d(0, 0)
         self.initial_pos = Vec2d(0, 0)
 
+        self.entities = []
+
+        self.entities.append(self.player)
+        self.entities.append(Electron(Vec2d(5, 10)))
+        self.entities.append(Electron(Vec2d(10, 5)))
+
     def _get_mouse(self) -> Iterable[Vec2d]:
         self.mouse_pos = self.level.screen_to_pixel(Vec2d(*pygame.mouse.get_pos()))
 
@@ -54,6 +60,12 @@ class GameLevel:
             self.mouse_pos = Vec2d(0, 0)
             self.initial_pos = Vec2d(0, 0)
 
+    @property
+    def electrons(self):
+        for electron in self.entities:
+            if isinstance(electron, Electron):
+                yield electron
+
     def game_loop(self, dt: float):
         
         if self.player.vel.magnitude < constants.MAX_SHOOTING_SPEED:
@@ -62,8 +74,12 @@ class GameLevel:
 
         p_dt = dt / physics.PHYSICS_STEPS
         for _i in range(physics.PHYSICS_STEPS):
-            self.level.apply(self.player, p_dt)
-            self.player.update(p_dt)
+            for electron in self.electrons:
+                self.level.apply(electron, p_dt)
+                for force in self.entities:
+                    force.apply(electron, p_dt)
+                electron.update(p_dt)
+
 
     def draw(self, screen: pygame.Surface):
         screen.blit(pygame.transform.scale(self.level.surface, tuple(constants.BOARD_SIZE)), self.world)
@@ -76,7 +92,9 @@ class GameLevel:
             pygame.draw.line(screen, (255, 0, 0), tuple(line_start), tuple(line_end))
 
 
-        pygame.draw.circle(screen, (255, 255, 255), tuple(self.level.pixel_to_screen(self.player.pos)), self.ball_size)
+        for electron in self.electrons:
+            color = (255, 255, 255) if electron == self.player else (128, 255, 255)
+            pygame.draw.circle(screen, color, tuple(self.level.pixel_to_screen(electron.pos)), self.ball_size)
 
     def is_finished(self) -> bool:
         return self.level.completed

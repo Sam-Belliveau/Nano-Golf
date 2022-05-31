@@ -103,12 +103,14 @@ class MField(Floor):
     @property
     def color(self) -> pygame.Color:
         color = super().color
+        t = self.force * physics.ELECTRON_CHARGE * time.time()
+
         if 0 < self.force:
-            color.r = int(160 + 32 * math.sin(self.pos.y + self.force * time.time()))
+            color.r = int(160 + 32 * math.sin(self.pos.y + t))
             color.g = color.g - color.r
 
         if 0 > self.force:
-            color.b = int(160 + 32 * math.sin(self.pos.y + self.force * time.time()))
+            color.b = int(160 + 32 * math.sin(self.pos.y + t))
             color.g = color.g - color.b
 
         return color
@@ -118,8 +120,7 @@ class MField(Floor):
         super().apply(electron, dt)
 
         if self.contains(electron):
-            electron.vel = electron.vel.add_cross(-dt * self.force)
-
+            electron.apply_mfield(self.force, dt)
 
 class Wall(Sector): 
 
