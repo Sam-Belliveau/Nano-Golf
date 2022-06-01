@@ -123,4 +123,3 @@ class Vec2d:
     def __ne__(self, rhs: Vec2d) -> bool:
         return self.x != rhs.x or self.y != rhs.y
         
-

@@ -1,4 +1,3 @@
-from curses import mouseinterval
 from typing import Iterable
 import constants
 import pygame
@@ -54,17 +53,18 @@ class GameLevel:
             self.initial_pos = Vec2d(0, 0)
 
     def game_loop(self, dt: float):
-        for player in self.level.get_players():
-            if player.vel.magnitude < constants.MAX_SHOOTING_SPEED:
-                for vel in self._get_mouse():
-                    player.vel += vel
+        for vel in self._get_mouse():
+            for player in self.level.get_players():
+                if player.can_shoot:
+                        player.vel += vel
 
-        for electron in self.level.get_electrons():
-            steps = electron.substeps(dt)
-            p_dt = dt / steps
-            for _i in range(steps):
+        p_dt = dt / physics.SUBSTEPS
+        for _i in range(physics.SUBSTEPS):
+            for electron in self.level.get_electrons():
                 for force in self.level.get_forces(electron):
                     force.apply(electron, p_dt)
+
+            for electron in self.level.get_electrons():
                 electron.update(p_dt)
 
 
@@ -75,9 +75,10 @@ class GameLevel:
             diff = self.mouse_pos - self.initial_pos
 
             for player in self.level.get_players():
-                line_start = self.level.pixel_to_screen(player.pos)
-                line_end = self.level.pixel_to_screen(player.pos - diff)
-                pygame.draw.line(screen, (255, 0, 0), tuple(line_start), tuple(line_end))
+                if player.can_shoot:
+                    line_start = self.level.pixel_to_screen(player.pos)
+                    line_end = self.level.pixel_to_screen(player.pos - diff)
+                    pygame.draw.line(screen, (255, 0, 0), tuple(line_start), tuple(line_end))
 
         for electron in self.level.get_electrons():
             pygame.draw.circle(screen, electron.color, tuple(self.level.pixel_to_screen(electron.pos)), self.ball_size)

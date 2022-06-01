@@ -1,32 +1,39 @@
-from math import dist
-
 import pygame
 from physics import Force
 import physics 
+import constants
 
 from vec2d import Vec2d
 
 
 class Electron(Force):
 
-    def __init__(self, pos: Vec2d, player=False):
+    def __init__(self, pos: Vec2d, player: bool =False):
         self.pos = pos
         self.vel = Vec2d(0, 0)
         self.player = player
         self.charge = physics.ELECTRON_CHARGE
 
-    def substeps(self, dt: float) -> int:
-        return max(1, int(self.vel.magnitude * dt / physics.MAX_STEP_SIZE))
+    @property
+    def can_shoot(self) -> bool:
+        return self.vel.magnitude < constants.MAX_SHOOTING_SPEED
+
+    def magnetic_field(self, pos: Vec2d) -> float:
+        r = pos - self.pos
+        rm = r.magnitude
+        return  self.vel.cross_vec(r) / (rm * rm * rm)
 
     def apply(self, electron: 'Electron', dt: float) -> None:
         if self == electron: return
 
-        force = self.charge * electron.charge
+        # force = self.charge * electron.charge
 
-        distance = self.pos - electron.pos
-        r = distance.magnitude
+        # distance = self.pos - electron.pos
+        # r = distance.magnitude
 
-        self.vel += dt * force * distance / (r * r * r)
+        # self.vel += dt * force * distance / (r * r * r)
+
+        self.apply_mfield(electron.magnetic_field(self.pos), dt)
 
     def apply_mfield(self, force: float, dt: float) -> None:
         self.vel = self.vel.add_cross(self.charge * dt * force)
@@ -37,4 +44,4 @@ class Electron(Force):
     @property
     def color(self) -> pygame.Color:
         if self.player: return pygame.Color(255, 255, 255)
-        else: return pygame.Color(128, 200, 255)
+        else: return pygame.Color(128, 255, 255)
