@@ -23,20 +23,22 @@ class Level:
         if b == 0: return sector.MField(pos, +r * physics.MAX_MAGNETIC_FIELD / 255)
 
         # Special Cases
-        if g >= 128: return sector.Goal(self, pos)
-        if g <= 127: return sector.Start(self, pos)
+        if g == 255: return sector.Goal(self, pos)
+        if g == 100: return sector.OtherStart(self, pos)
+        if g == 0: return sector.Start(self, pos)
 
         # wtf
-        print("somebody made an oopsy")
+        print(f"Unknown Color (r: {r}, g: {g}, b: {b})!")
         return sector.Sector(pos)
         
 
     def __init__(self, file: str):
         image = pygame.image.load(file)
 
-        self.size: int = Vec2d(image.get_width(), image.get_height())
+        self.size: Vec2d = Vec2d(image.get_width(), image.get_height())
 
-        self.start: Vec2d = Vec2d(0, 0)
+        self.objects: List[physics.Force] = []
+        self.completed = False
 
         self.sectors: List(List(sector.Sector)) = [[
             self._generate_sector(image.unmap_rgb(pixel), Vec2d(x, y))
@@ -45,7 +47,7 @@ class Level:
 
         self.pixels = pygame.PixelArray(pygame.Surface(tuple(self.size)))
 
-        self.completed = False
+    ### DRAWING ###
 
     @property
     def surface(self):
@@ -55,11 +57,51 @@ class Level:
 
         return self.pixels.make_surface()
 
+    ### FORCES ###
+
     def get_sector(self, pixel: Vec2d) -> sector.Sector:
-        try:
-            return self.sectors[pixel.x][pixel.y]
-        except IndexError:
-            return None
+        try: return self.sectors[pixel.x][pixel.y]
+        except IndexError: return None
+
+    def add_object(self, object: physics.Force):
+        self.objects.append(object)
+
+    def get_sectors(self, electron: 'electron.Electron'):
+        x, y = electron.pos.floor()
+        try: yield self.sectors[x + 0][y + 0]
+        except IndexError as _e: pass
+        try: yield self.sectors[x + 1][y + 0]
+        except IndexError as _e: pass
+        try: yield self.sectors[x + 0][y + 1]
+        except IndexError as _e: pass
+        try: yield self.sectors[x - 1][y + 0]
+        except IndexError as _e: pass
+        try: yield self.sectors[x + 0][y - 1]
+        except IndexError as _e: pass
+        try: yield self.sectors[x + 1][y + 1]
+        except IndexError as _e: pass
+        try: yield self.sectors[x + 1][y - 1]
+        except IndexError as _e: pass
+        try: yield self.sectors[x - 1][y + 1]
+        except IndexError as _e: pass
+        try: yield self.sectors[x - 1][y - 1]
+        except IndexError as _e: pass
+
+    def get_electrons(self):
+        for force in self.objects: 
+            if isinstance(force, electron.Electron):
+                yield force
+
+    def get_players(self):
+        for electron in self.get_electrons():
+            if electron.player:
+                yield electron
+
+    def get_forces(self, electron: 'electron.Electron'):
+        for force in self.get_sectors(electron): yield force
+        for force in self.objects: yield force
+
+    ### SCALING ###
 
     def pixel_to_screen(self, pixel: Vec2d) -> Vec2d:
         return constants.BOARD_POS + pixel * constants.BOARD_SIZE / self.size
@@ -67,17 +109,8 @@ class Level:
     def screen_to_pixel(self, screen: Vec2d) -> Vec2d:
         return (self.size * (screen - constants.BOARD_POS)) / constants.BOARD_SIZE
 
-    def apply(self, electron: 'electron.Electron', dt: float):
-        x, y = electron.pos.floor()
-
-        for dx in [-1, 0, 1]:
-            for dy in [-1, 0, 1]:
-                try:
-                    self.sectors[x + dx][y + dy].apply(electron, dt)
-                except IndexError as e:
-                    # A ball his the edge of the world
-                    pass
-
+    ### NICE TO HAVES ###
+    
     def __repr__(self):
         return f"Image(x: {self.size.x}, y:{self.size.y})"
         

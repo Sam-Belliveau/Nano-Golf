@@ -75,7 +75,7 @@ class Goal(Floor):
             
             else:
                 electron.vel = electron.vel.add_cross(
-                    dt * diff.cross_vec(electron.vel) * constants.HOLE_DEFLECT_SPEED
+                    dt * diff.cross_vec(electron.vel.normalized()) * constants.HOLE_DEFLECT_SPEED
                 ) 
 
 
@@ -84,7 +84,7 @@ class Start(Floor):
     def __init__(self, level: 'level.Level', pos: Vec2d):
         super().__init__(pos)
         self.level = level
-        self.level.start = self.pos + Vec2d(0.5, 0.5)
+        self.level.add_object(electron.Electron(self.center, player=True))
 
     @property
     def color(self) -> pygame.Color: 
@@ -93,6 +93,20 @@ class Start(Floor):
     def apply(self, electron: 'electron.Electron', dt: float) -> None: 
         super().apply(electron, dt)
 
+
+class OtherStart(Floor):
+
+    def __init__(self, level: 'level.Level', pos: Vec2d):
+        super().__init__(pos)
+        self.level = level
+        self.level.add_object(electron.Electron(self.center))
+
+    @property
+    def color(self) -> pygame.Color: 
+        return pygame.Color(0, 160, 0)
+    
+    def apply(self, electron: 'electron.Electron', dt: float) -> None: 
+        super().apply(electron, dt)
 
 class MField(Floor): 
 

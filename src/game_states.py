@@ -30,19 +30,12 @@ class GameLevel:
 
         self.level_num = level_num
         self.level = Level(f"./resources/L{level_num}.png")
-        self.player = Electron(self.level.start)
 
         self.ball_size = (constants.BOARD_SIZE / self.level.size).x / 2
 
         self.mouse_pressed = False
         self.mouse_pos = Vec2d(0, 0)
         self.initial_pos = Vec2d(0, 0)
-
-        self.entities = []
-
-        self.entities.append(self.player)
-        self.entities.append(Electron(Vec2d(5, 10)))
-        self.entities.append(Electron(Vec2d(10, 5)))
 
     def _get_mouse(self) -> Iterable[Vec2d]:
         self.mouse_pos = self.level.screen_to_pixel(Vec2d(*pygame.mouse.get_pos()))
@@ -60,23 +53,17 @@ class GameLevel:
             self.mouse_pos = Vec2d(0, 0)
             self.initial_pos = Vec2d(0, 0)
 
-    @property
-    def electrons(self):
-        for electron in self.entities:
-            if isinstance(electron, Electron):
-                yield electron
-
     def game_loop(self, dt: float):
-        
-        if self.player.vel.magnitude < constants.MAX_SHOOTING_SPEED:
-            for vel in self._get_mouse():
-                self.player.vel = vel
+        for player in self.level.get_players():
+            if player.vel.magnitude < constants.MAX_SHOOTING_SPEED:
+                for vel in self._get_mouse():
+                    player.vel += vel
 
-        p_dt = dt / physics.PHYSICS_STEPS
-        for _i in range(physics.PHYSICS_STEPS):
-            for electron in self.electrons:
-                self.level.apply(electron, p_dt)
-                for force in self.entities:
+        for electron in self.level.get_electrons():
+            steps = electron.substeps(dt)
+            p_dt = dt / steps
+            for _i in range(steps):
+                for force in self.level.get_forces(electron):
                     force.apply(electron, p_dt)
                 electron.update(p_dt)
 
@@ -87,14 +74,13 @@ class GameLevel:
         if pygame.mouse.get_pressed()[0]:
             diff = self.mouse_pos - self.initial_pos
 
-            line_start = self.level.pixel_to_screen(self.player.pos)
-            line_end = self.level.pixel_to_screen(self.player.pos - diff)
-            pygame.draw.line(screen, (255, 0, 0), tuple(line_start), tuple(line_end))
+            for player in self.level.get_players():
+                line_start = self.level.pixel_to_screen(player.pos)
+                line_end = self.level.pixel_to_screen(player.pos - diff)
+                pygame.draw.line(screen, (255, 0, 0), tuple(line_start), tuple(line_end))
 
-
-        for electron in self.electrons:
-            color = (255, 255, 255) if electron == self.player else (128, 255, 255)
-            pygame.draw.circle(screen, color, tuple(self.level.pixel_to_screen(electron.pos)), self.ball_size)
+        for electron in self.level.get_electrons():
+            pygame.draw.circle(screen, electron.color, tuple(self.level.pixel_to_screen(electron.pos)), self.ball_size)
 
     def is_finished(self) -> bool:
         return self.level.completed

@@ -29,46 +29,45 @@ class Vec2d:
     ### MUL ###
 
     def __mul__(self, rhs: float | int | Vec2d) -> Vec2d:
-        if isinstance(rhs, (float, int)):
-            return Vec2d(
-                self.x * rhs, 
-                self.y * rhs
-            )
-        
         if isinstance(rhs, Vec2d):
             return Vec2d(
                 self.x * rhs.x, 
                 self.y * rhs.y
             )
 
+        return Vec2d(
+            self.x * rhs, 
+            self.y * rhs
+        )
+
     def __rmul__(self, rhs: float | int | Vec2d) -> Vec2d:
-        if isinstance(rhs, (float, int)):
-            return Vec2d(
-                self.x * rhs, 
-                self.y * rhs
-            )
-        
         if isinstance(rhs, Vec2d):
             return Vec2d(
                 self.x * rhs.x, 
                 self.y * rhs.y
             )
+
+        return Vec2d(
+            self.x * rhs, 
+            self.y * rhs
+        )
+        
 
 
     ### DIV ###
 
-    def __truediv__(self, rhs: float | int) -> Vec2d:
-        if isinstance(rhs, (float, int)):
-            return Vec2d(
-                self.x / rhs, 
-                self.y / rhs
-            )
-        
+    def __truediv__(self, rhs: float | int | Vec2d) -> Vec2d:
         if isinstance(rhs, Vec2d):
             return Vec2d(
                 self.x / rhs.x, 
                 self.y / rhs.y
             )
+
+        return Vec2d(
+            self.x / rhs, 
+            self.y / rhs
+        )
+
 
     ### Products ###
 
