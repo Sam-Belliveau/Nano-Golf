@@ -26,7 +26,7 @@ class Electron(Force):
         distance = self.pos - electron.pos
         r = distance.magnitude
 
-        self.vel += dt * force * distance.normalized() / (r * r)
+        self.vel += dt * force * distance / (r * r * r)
 
     def apply_mfield(self, force: float, dt: float) -> None:
         self.vel = self.vel.add_cross(self.charge * dt * force)
