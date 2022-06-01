@@ -21,22 +21,22 @@ class Electron(Force):
     def magnetic_field(self, pos: Vec2d) -> float:
         r = pos - self.pos
         rm = r.magnitude
-        return  self.vel.cross_vec(r) / (rm * rm * rm)
+        i = physics.ELECTRON_MAGNETIC_FIELD_SCALE * self.charge * self.vel
+        return i.cross_vec(r.normalized()) / (rm * rm)
 
     def apply(self, electron: 'Electron', dt: float) -> None:
         if self == electron: return
 
-        # force = self.charge * electron.charge
+        force = self.charge * electron.charge
 
-        # distance = self.pos - electron.pos
-        # r = distance.magnitude
+        distance = self.pos - electron.pos
+        r = distance.magnitude
 
-        # self.vel += dt * force * distance / (r * r * r)
-
+        self.vel += dt * force * distance / (r * r * r)
         self.apply_mfield(electron.magnetic_field(self.pos), dt)
 
     def apply_mfield(self, force: float, dt: float) -> None:
-        self.vel = self.vel.add_cross(self.charge * dt * force)
+        self.vel = self.vel.add_cross(dt * self.charge * force)
 
     def update(self, dt: float) -> None:
         self.pos += self.vel * dt

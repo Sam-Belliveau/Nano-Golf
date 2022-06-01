@@ -7,11 +7,13 @@ import level
 import electron
 import physics
 import constants
+import colors
 
 
 class Sector(physics.Force):
 
-    def __init__(self, pos: Vec2d):
+    def __init__(self, level: 'level.Level', pos: Vec2d):
+        self.level = level
         self.pos = pos.floor()
         self.center = self.pos + Vec2d(0.5, 0.5)
 
@@ -35,12 +37,16 @@ class Sector(physics.Force):
 
 class Floor(Sector): 
 
-    def __init__(self, pos: Vec2d):
-        super().__init__(pos)
+    def __init__(self, level: 'level.Level', pos: Vec2d):
+        super().__init__(level, pos)
 
     @property
     def color(self) -> pygame.Color:
-        return pygame.Color(0, 200, 0)
+        mag_field = sum((
+            electron.magnetic_field(self.center)
+            for electron in self.level.get_electrons()
+        ))
+        return colors.magnetic_field(self.center, mag_field)
 
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
         if self.contains(electron):
@@ -50,14 +56,11 @@ class Floor(Sector):
 class Goal(Floor):
 
     def __init__(self, level: 'level.Level', pos: Vec2d):
-        super().__init__(pos)
-        self.level = level
+        super().__init__(level, pos)
 
     @property
     def color(self) -> pygame.Color: 
-        s = int(30 * math.sin(12 * time.time()))
-        y = int(224 + s)
-        return pygame.Color(y, 32 + s, y)
+        return colors.goal()
     
     def apply(self, electron: 'electron.Electron', dt: float) -> None: 
         if self.distance(electron.pos).magnitude <= 0.5:
@@ -65,10 +68,8 @@ class Goal(Floor):
             diff = (self.center - electron.pos)
 
             if vel_mag < constants.MAX_SCORING_SPEED:
-                m = 1.0 - math.exp(-dt / 0.5)
-
                 electron.vel = Vec2d(0, 0)
-                electron.pos += diff * m
+                electron.pos += diff * (1.0 - math.exp(-dt / 0.5))
 
                 if diff.magnitude < 0.05:
                     self.level.completed = True
@@ -82,14 +83,13 @@ class Goal(Floor):
 class Start(Floor):
 
     def __init__(self, level: 'level.Level', pos: Vec2d):
-        super().__init__(pos)
-        self.level = level
-        self.level.add_object(electron.Electron(self.center, player=True))
+        super().__init__(level, pos)
+        self.level.add_electron(electron.Electron(self.center, player=True))
 
     @property
-    def color(self) -> pygame.Color: 
-        return pygame.Color(0, 120, 0)
-    
+    def color(self) -> pygame.Color:
+        return colors.start()
+
     def apply(self, electron: 'electron.Electron', dt: float) -> None: 
         super().apply(electron, dt)
 
@@ -97,39 +97,32 @@ class Start(Floor):
 class OtherStart(Floor):
 
     def __init__(self, level: 'level.Level', pos: Vec2d):
-        super().__init__(pos)
+        super().__init__(level, pos)
         self.level = level
-        self.level.add_object(electron.Electron(self.center))
+        self.level.add_electron(electron.Electron(self.center))
 
     @property
-    def color(self) -> pygame.Color: 
-        return pygame.Color(0, 160, 0)
+    def color(self) -> pygame.Color:         
+        return colors.start_other()
     
     def apply(self, electron: 'electron.Electron', dt: float) -> None: 
         super().apply(electron, dt)
 
 class MField(Floor): 
 
-    def __init__(self, pos: Vec2d, force: float):
-        super().__init__(pos)
+    def __init__(self, level: 'level.Level', pos: Vec2d, force: float):
+        super().__init__(level, pos)
         self.force = force
         
     @property
     def color(self) -> pygame.Color:
-        color = super().color
-        t = self.force * physics.ELECTRON_CHARGE * time.time()
+        mag_field = sum((
+            electron.magnetic_field(self.center)
+            for electron in self.level.get_electrons()
+        ))
 
-        if 0 < self.force:
-            color.r = int(160 + 32 * math.sin(self.pos.y + t))
-            color.g = color.g - color.r
-
-        if 0 > self.force:
-            color.b = int(160 + 32 * math.sin(self.pos.y + t))
-            color.g = color.g - color.b
-
-        return color
+        return colors.magnetic_field(self.center, mag_field + self.force)
             
-
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
         super().apply(electron, dt)
 
@@ -139,8 +132,7 @@ class MField(Floor):
 class Wall(Sector): 
 
     def __init__(self, level: 'level.Level', pos: Vec2d):
-        super().__init__(pos)
-        self.level = level
+        super().__init__(level, pos)
         self.t = None
         self.b = None
         self.l = None
@@ -148,7 +140,7 @@ class Wall(Sector):
 
     @property
     def color(self) -> pygame.Color:
-        return pygame.Color(0, 0, 0)
+        return colors.wall()
 
     def _get_dirs(self):
         if self.t is None:

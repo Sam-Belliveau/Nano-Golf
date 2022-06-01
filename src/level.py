@@ -1,6 +1,6 @@
 from ast import List
+import itertools
 import constants
-import os
 import pygame
 import electron
 import sector
@@ -16,11 +16,11 @@ class Level:
         # Wall / Floor Detection
         if r == 0 and b == 0:
             if g == 0: return sector.Wall(self, pos)
-            if g != 0: return sector.Floor(pos)
+            if g != 0: return sector.Floor(self, pos)
 
         # Magnetic Field Detection
-        if r == 0: return sector.MField(pos, -b * physics.MAX_MAGNETIC_FIELD / 255)
-        if b == 0: return sector.MField(pos, +r * physics.MAX_MAGNETIC_FIELD / 255)
+        if r == 0: return sector.MField(self, pos, -b * physics.MAX_MAGNETIC_FIELD / 255)
+        if b == 0: return sector.MField(self, pos, +r * physics.MAX_MAGNETIC_FIELD / 255)
 
         # Special Cases
         if g == 255: return sector.Goal(self, pos)
@@ -29,7 +29,7 @@ class Level:
 
         # wtf
         print(f"Unknown Color (r: {r}, g: {g}, b: {b})!")
-        return sector.Sector(pos)
+        return sector.Sector(self, pos)
         
 
     def __init__(self, file: str):
@@ -37,7 +37,7 @@ class Level:
 
         self.size: Vec2d = Vec2d(image.get_width(), image.get_height())
 
-        self.objects: List[physics.Force] = []
+        self.electrons: List[electron.Electron] = []
         self.completed = False
 
         self.sectors: List(List(sector.Sector)) = [[
@@ -63,8 +63,8 @@ class Level:
         try: return self.sectors[pixel.x][pixel.y]
         except IndexError: return None
 
-    def add_object(self, object: physics.Force):
-        self.objects.append(object)
+    def add_electron(self, electron: electron.Electron):
+        self.electrons.append(electron)
 
     def get_sectors(self, electron: 'electron.Electron'):
         x, y = electron.pos.floor()
@@ -88,18 +88,13 @@ class Level:
         except IndexError as _e: pass
 
     def get_electrons(self):
-        for force in self.objects: 
-            if isinstance(force, electron.Electron):
-                yield force
+        return self.electrons
 
     def get_players(self):
-        for electron in self.get_electrons():
-            if electron.player:
-                yield electron
+        return filter(lambda e: e.player, self.electrons)
 
     def get_forces(self, electron: 'electron.Electron'):
-        for force in self.get_sectors(electron): yield force
-        for force in self.objects: yield force
+        return itertools.chain(self.get_sectors(electron), self.electrons)
 
     ### SCALING ###
 
