@@ -43,5 +43,5 @@ class Electron(Force):
 
     @property
     def color(self) -> pygame.Color:
-        if self.player: return pygame.Color(255, 255, 255)
+        if self.player: return pygame.Color(255, 255, 128)
         else: return pygame.Color(128, 255, 255)

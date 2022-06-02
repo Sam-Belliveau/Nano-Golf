@@ -22,6 +22,8 @@ def pygame_running(screen) -> bool:
 
 def main():
     pygame.init()
+    constants.FONT_BIG = pygame.font.SysFont("arial.ttf", 60, bold=True)
+    constants.FONT_NORMAL = pygame.font.SysFont("arial.ttf", 32)
 
     clock = pygame.time.Clock()
     screen = pygame.display.set_mode([*constants.WINDOW_SIZE])

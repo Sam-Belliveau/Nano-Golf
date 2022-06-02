@@ -142,29 +142,22 @@ class Wall(Sector):
     def color(self) -> pygame.Color:
         return colors.wall()
 
-    def _get_dirs(self):
+    def _update_dirs(self):
         if self.t is None:
             self.t = isinstance(self.level.get_sector(self.pos + Vec2d(+0, +1)), Floor)
             self.b = isinstance(self.level.get_sector(self.pos + Vec2d(+0, -1)), Floor)
             self.l = isinstance(self.level.get_sector(self.pos + Vec2d(-1, +0)), Floor)
             self.r = isinstance(self.level.get_sector(self.pos + Vec2d(+1, +0)), Floor)
 
-        return self.t, self.b, self.l, self.r
-
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
         dist = self.distance(electron.pos)
 
         if dist.magnitude <= 0.5:
-            t, b, l, r = self._get_dirs()
-            t &= dist.y >= 0.0
-            b &= dist.y <= 0.0
-            l &= dist.x <= 0.0
-            r &= dist.x >= 0.0
-
-            if not t: dist.y = min(0.0, dist.y)
-            if not b: dist.y = max(0.0, dist.y)
-            if not l: dist.x = max(0.0, dist.x)
-            if not r: dist.x = min(0.0, dist.x)
+            self._update_dirs()
+            if not self.t: dist.y = min(0.0, dist.y)
+            if not self.b: dist.y = max(0.0, dist.y)
+            if not self.l: dist.x = max(0.0, dist.x)
+            if not self.r: dist.x = min(0.0, dist.x)
             
             normal = dist.normalized()
             electron.vel -= 2.0 * normal * min(0.0, normal.dot(electron.vel))

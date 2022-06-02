@@ -1,3 +1,4 @@
+import math
 from pygame import Color
 from time import time
 from math import sin
@@ -14,14 +15,21 @@ def average_sin(freq: float = 1.0, phase: float = 0.0):
     return (sin(freq * time() + phase) + 1.0) * 0.5 
 
 def average_colors(a: Color, b: Color, t: float):
+    GAMMA = 2.22
+    INV_GAMMA = 1.0 / GAMMA
+
     if t <= 0.0: return a
     if t >= 1.0: return b
+
+    a = a.correct_gamma(GAMMA)
+    b = b.correct_gamma(GAMMA)
+    
     return Color(
         clamp((1.0 - t) * a.r + (t) * b.r),
         clamp((1.0 - t) * a.g + (t) * b.g),
         clamp((1.0 - t) * a.b + (t) * b.b),
         clamp((1.0 - t) * a.a + (t) * b.a)
-    )
+    ).correct_gamma(INV_GAMMA)
 
 def wall():
     return Color(24, 0, 24)
@@ -54,7 +62,7 @@ def magnetic_field(pos: Vec2d, strength):
         positive_color = average_colors(
             POSITIVE_BRIGHT_COLOR,
             POSITIVE_DARK_COLOR,
-            average_sin(-8, 2.0 * pos.y)
+            average_sin(-12, 0.5 * math.pi * pos.y)
         )
         return average_colors(floor(), positive_color, t)
 
@@ -62,7 +70,7 @@ def magnetic_field(pos: Vec2d, strength):
         negative_color = average_colors(
             NEGATIVE_BRIGHT_COLOR,
             NEGATIVE_DARK_COLOR,
-            average_sin(8, 2.0 * pos.y)
+            average_sin(12, 0.5 * math.pi * pos.y)
         )
         return average_colors(floor(), negative_color, t)
 

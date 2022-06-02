@@ -101,6 +101,11 @@ class Vec2d:
         if magnitude == 0.0: return Vec2d(0, 0)
         return self / magnitude
 
+    def cap_magnitude(self, cap: float) -> Vec2d:
+        mag = self.magnitude
+        if mag > cap: return self * (cap / mag)
+        else: return self 
+
     def floor(self) -> Vec2d:
         return Vec2d(
             int(self.x),
