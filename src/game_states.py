@@ -30,11 +30,21 @@ class EndScreen(GameState):
     def game_loop(self, dt: float):
         pass
 
-    def draw(self, screen: pygame.Surface):
+    def draw(self, screen: pygame.Surface):        
+        screen.fill(pygame.Color(24, 64, 24))
         title = constants.FONT_BIG.render('Nano-Golf', True, (255, 255, 255))
-        score = constants.FONT_NORMAL.render(f"Final Score: #{self.score}", True, (255, 255, 255))
-        screen.blit(title, (300, 200))
-        screen.blit(score, (300, 300))
+        authors = constants.FONT_NORMAL.render('Ayan Choudhary & Sam Belliveau', True, (255, 255, 255))
+        score = constants.FONT_BIG.render(f"Final Score: {self.score}", True, (255, 255, 255))
+        screen.blit(title, (280, 60))
+        screen.blit(authors, (220, 100))
+        screen.blit(score, (230, 200))
+
+    def is_finished(self) -> bool:
+        return False
+
+    def next_state(self) -> Iterable['GameState']:
+        if self.is_finished():
+            yield EndScreen(self.score)
 
 
 
@@ -121,7 +131,6 @@ class GameLevel(GameState):
     def next_state(self) -> Iterable['GameState']:
         if self.is_finished():
             try:
-                next_state = GameLevel(self.level_num + 1, self.total_shots)
+                yield GameLevel(self.level_num + 1, self.total_shots)
             except Exception as _e:
-                next_state = EndScreen(self.total_shots)
-            yield next_state
+                yield EndScreen(self.total_shots)
