@@ -65,6 +65,18 @@ class GameLevel(GameState):
         self.shots = 0
         self.total_shots = shots
 
+        self.cheating = False
+
+    def _is_cheating(self) -> bool:
+        k = pygame.key.get_pressed()
+        pressed = k[pygame.K_n] and k[pygame.K_e] and k[pygame.K_x] and k[pygame.K_t]
+
+        if self.cheating and not pressed:
+            self.cheating = False
+            return True
+        elif pressed:
+            self.cheating = True
+
     def _get_mouse(self) -> Iterable[Vec2d]:
         self.mouse_pos = self.level.screen_to_pixel(Vec2d(*pygame.mouse.get_pos()))
 
@@ -97,6 +109,10 @@ class GameLevel(GameState):
 
             for electron in self.level.get_electrons():
                 electron.update(p_dt)
+
+        if self._is_cheating():
+            self.total_shots += 1000
+            self.level.completed = True
 
 
     def draw(self, screen: pygame.Surface):
