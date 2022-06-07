@@ -3,8 +3,8 @@ from vec2d import Vec2d
 
 WINDOW_SIZE = Vec2d(800, 540)
 
-BOARD_POS = Vec2d(40, 40)
-BOARD_SIZE = Vec2d(460, 460)
+BOARD_POS = Vec2d(0, 0)
+BOARD_SIZE = Vec2d(540, 540)
 
 FLOOR_FRICTION_DT = 1
 

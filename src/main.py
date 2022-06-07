@@ -1,7 +1,7 @@
 import constants
 import pygame
 from electron import Electron
-from game_states import GameLevel
+from game_states import GameLevel, StartMenu
 
 from level import Level
 import sector
@@ -31,7 +31,7 @@ def main():
     pygame.display.set_caption("Nano-Golf - Ayan & Sam")
     
     states = [] 
-    states.append(GameLevel(1))
+    states.append(StartMenu())
 
     while pygame_running(screen):
         dt = clock.tick(60) / 1000.0

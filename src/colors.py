@@ -32,7 +32,7 @@ def average_colors(a: Color, b: Color, t: float):
     ).correct_gamma(INV_GAMMA)
 
 def wall():
-    return Color(24, 0, 24)
+    return Color(0, 0, 0)
 
 def floor():
     return Color(0, 200, 0)

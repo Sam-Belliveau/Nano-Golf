@@ -98,11 +98,11 @@ class Level:
 
     ### SCALING ###
 
-    def pixel_to_screen(self, pixel: Vec2d) -> Vec2d:
-        return constants.BOARD_POS + pixel * constants.BOARD_SIZE / self.size
+    def pixel_to_screen(self, pixel: Vec2d, board_pos: Vec2d = constants.BOARD_POS, board_size: Vec2d = constants.BOARD_SIZE) -> Vec2d:
+        return board_pos + pixel * board_size / self.size
 
-    def screen_to_pixel(self, screen: Vec2d) -> Vec2d:
-        return (self.size * (screen - constants.BOARD_POS)) / constants.BOARD_SIZE
+    def screen_to_pixel(self, screen: Vec2d, board_pos: Vec2d = constants.BOARD_POS, board_size: Vec2d = constants.BOARD_SIZE) -> Vec2d:
+        return (self.size * (screen - board_pos)) / board_size
 
     ### NICE TO HAVES ###
     
