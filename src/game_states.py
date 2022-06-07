@@ -1,11 +1,9 @@
-from ast import Constant
+
 from typing import Iterable
 import constants
 import pygame
-from electron import Electron
 
 from level import Level
-import sector
 import physics
 from vec2d import Vec2d
 
@@ -22,86 +20,6 @@ class GameState:
 
     def next_state(self) -> Iterable['GameState']:
         pass
-
-class EndScreen(GameState):
-
-    def __init__(self, score: int):
-        self.world = pygame.Rect(0, 0, *constants.WINDOW_SIZE)
-
-        self.level = Level(f"./resources/MENU.png")
-
-        self.ball_size = (constants.WINDOW_SIZE / self.level.size).x / 2
-
-        self.final_score = score
-
-        self.mouse_pressed = False
-        self.mouse_pos = Vec2d(0, 0)
-        self.initial_pos = Vec2d(0, 0)
-
-    def _get_mouse(self) -> Iterable[Vec2d]:
-        self.mouse_pos = self.level.screen_to_pixel(Vec2d(*pygame.mouse.get_pos()), Vec2d(0, 0), constants.WINDOW_SIZE)
-
-        if pygame.mouse.get_pressed()[0]:
-            yield Vec2d(0, 0)
-            if not self.mouse_pressed:
-                self.initial_pos = self.mouse_pos
-                self.mouse_pressed = True
-        else:
-            if self.mouse_pressed:
-                yield (self.initial_pos - self.mouse_pos).cap_magnitude(constants.SHOOT_SPEED_CAP / 2) * constants.SHOOT_SPEED
-
-            self.mouse_pressed = False
-            self.mouse_pos = Vec2d(0, 0)
-            self.initial_pos = Vec2d(0, 0)
-
-    def game_loop(self, dt: float):
-        for vel in self._get_mouse():
-            for player in self.level.get_players():
-                if player.can_shoot:
-                        player.vel += vel
-
-        p_dt = dt / physics.SUBSTEPS
-        for _i in range(physics.SUBSTEPS):
-            for electron in self.level.get_electrons():
-                for force in self.level.get_forces(electron):
-                    force.apply(electron, p_dt)
-
-            for electron in self.level.get_electrons():
-                electron.update(p_dt)
-
-    def draw(self, screen: pygame.Surface):
-        screen.fill(pygame.Color(24, 64, 24))
-        screen.blit(pygame.transform.scale(self.level.surface, tuple(constants.WINDOW_SIZE)), self.world)
-
-        instruction = constants.FONT_NORMAL.render(f"Click & Drag to Restart", True, (255, 255, 255))
-        score = constants.FONT_NORMAL.render(f"Final Score: {self.final_score}", True, (255, 255, 255))
-
-        screen.blit(instruction, (290, 380))
-        screen.blit(score, (320, 260))
-
-        if pygame.mouse.get_pressed()[0]:
-            diff = (self.mouse_pos - self.initial_pos).cap_magnitude(constants.SHOOT_SPEED_CAP / 2)
-
-            for player in self.level.get_players():
-                if player.can_shoot:
-                    line_start = self.level.pixel_to_screen(player.pos, Vec2d(0, 0), constants.WINDOW_SIZE)
-                    line_end = self.level.pixel_to_screen(player.pos - diff, Vec2d(0, 0), constants.WINDOW_SIZE)
-                    pygame.draw.line(screen, (255, 0, 0), tuple(line_start), tuple(line_end))
-
-        for electron in self.level.get_electrons():
-            pygame.draw.circle(screen, electron.color, tuple(self.level.pixel_to_screen(electron.pos, Vec2d(0, 0), constants.WINDOW_SIZE)), self.ball_size)
-
-    def is_finished(self) -> bool:
-        return self.level.completed
-
-    def next_state(self) -> Iterable['GameState']:
-        if self.is_finished():
-            try:
-                yield GameLevel(1)
-            except Exception as _e:
-                yield EndScreen(self.total_shots)
-
-
 
 class GameLevel(GameState):
 
@@ -260,6 +178,44 @@ class StartMenu(GameState):
 
         screen.blit(instruction, (300, 380))
         screen.blit(author, (320, 260))
+
+        if pygame.mouse.get_pressed()[0]:
+            diff = (self.mouse_pos - self.initial_pos).cap_magnitude(constants.SHOOT_SPEED_CAP / 2)
+
+            for player in self.level.get_players():
+                if player.can_shoot:
+                    line_start = self.level.pixel_to_screen(player.pos, Vec2d(0, 0), constants.WINDOW_SIZE)
+                    line_end = self.level.pixel_to_screen(player.pos - diff, Vec2d(0, 0), constants.WINDOW_SIZE)
+                    pygame.draw.line(screen, (255, 0, 0), tuple(line_start), tuple(line_end))
+
+        for electron in self.level.get_electrons():
+            pygame.draw.circle(screen, electron.color, tuple(self.level.pixel_to_screen(electron.pos, Vec2d(0, 0), constants.WINDOW_SIZE)), self.ball_size)
+
+    def is_finished(self) -> bool:
+        return self.level.completed
+
+    def next_state(self) -> Iterable['GameState']:
+        if self.is_finished():
+            try:
+                yield GameLevel(1)
+            except Exception as _e:
+                yield EndScreen(self.total_shots)
+
+class EndScreen(StartMenu):
+
+    def __init__(self, score: int):
+        super().__init__()
+        self.final_score = score
+
+    def draw(self, screen: pygame.Surface):
+        screen.fill(pygame.Color(24, 64, 24))
+        screen.blit(pygame.transform.scale(self.level.surface, tuple(constants.WINDOW_SIZE)), self.world)
+
+        instruction = constants.FONT_NORMAL.render(f"Click & Drag to Restart", True, (255, 255, 255))
+        score = constants.FONT_NORMAL.render(f"Final Score: {self.final_score}", True, (255, 255, 255))
+
+        screen.blit(instruction, (290, 380))
+        screen.blit(score, (320, 260))
 
         if pygame.mouse.get_pressed()[0]:
             diff = (self.mouse_pos - self.initial_pos).cap_magnitude(constants.SHOOT_SPEED_CAP / 2)
