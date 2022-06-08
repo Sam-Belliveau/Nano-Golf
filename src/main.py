@@ -1,12 +1,8 @@
 import constants
 import pygame
-from electron import Electron
-from game_states import GameLevel, StartMenu
+from game_states import StartMenu
 
-from level import Level
-import sector
-import physics
-from vec2d import Vec2d
+from level import resource_path
 
 def pygame_running(screen) -> bool:
 
@@ -22,16 +18,17 @@ def pygame_running(screen) -> bool:
 
 def main():
     pygame.init()
-    constants.FONT_BIG = pygame.font.SysFont("arial.ttf", 60, bold=True)
-    constants.FONT_NORMAL = pygame.font.SysFont("arial.ttf", 32)
-
     clock = pygame.time.Clock()
-    screen = pygame.display.set_mode([*constants.WINDOW_SIZE])
-    pygame.display.set_icon(pygame.image.load("./resources/icon.png"))
+    screen = pygame.display.set_mode([*constants.WINDOW_SIZE])    
+    pygame.display.set_icon(pygame.image.load(resource_path("./resources/icon.icns")))
     pygame.display.set_caption("Nano-Golf - Ayan & Sam")
     
     states = [] 
     states.append(StartMenu())
+    
+    constants.FONT_BIG = pygame.font.SysFont(None, 60, bold=True)
+    constants.FONT_NORMAL = pygame.font.SysFont(None, 32)
+
 
     while pygame_running(screen):
         dt = clock.tick(60) / 1000.0

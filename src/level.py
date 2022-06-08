@@ -6,7 +6,19 @@ import electron
 import sector
 import physics
 from vec2d import Vec2d
-        
+
+import sys
+import os
+
+def resource_path(relative_path):
+    try:
+    # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 class Level:
 
     def _generate_sector(self, color: pygame.Color, pos: Vec2d):
@@ -33,7 +45,7 @@ class Level:
         
 
     def __init__(self, file: str):
-        image = pygame.image.load(file)
+        image = pygame.image.load(resource_path(file))
 
         self.size: Vec2d = Vec2d(image.get_width(), image.get_height())
 
