@@ -151,8 +151,12 @@ class Wall(Sector):
 
     def apply(self, electron: 'electron.Electron', dt: float) -> None:
         dist = self.distance(electron.pos)
+        dist_mag = dist.magnitude
 
-        if dist.magnitude <= 0.5:
+        if dist_mag <= 0.5:
+            if dist_mag <= 0.0:
+                dist = electron.pos - self.center
+
             self._update_dirs()
             if not self.t: dist.y = min(0.0, dist.y)
             if not self.b: dist.y = max(0.0, dist.y)
